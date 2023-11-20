@@ -223,7 +223,6 @@
   handleShowPopup();
 </script>
 
-
 {% comment %} добавления в корзину
 //todo - имплиминтировать передачу variant.id товара из секции блока
 //todo - обновлять корзину в реальном времени
@@ -304,7 +303,6 @@
     }
   };
 
-
   // Хендлеры для успеха/ошибки добавления товаров
   const handleError = (error) => {
     console.error('Error in  adding product to cart ', error);
@@ -312,7 +310,6 @@
   };
 
   const handleSuccess = () => isProductsAddedToCart = 'Yes';
-
 
   // Обновляем состояние корзины. Перепробывал несколько вариантов...не работает :(
   async function handleCartUpdate() {
@@ -369,12 +366,10 @@
       await delay(2000);
       hidePopup();
     }
-
   };
 
   button.addEventListener('click', handleAddToCart);
 </script>
-
 
 {% schema %}
 {
