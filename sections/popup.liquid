@@ -91,7 +91,8 @@
                 {{ closeBtn }}
                 <div class='popup-inner__item'>
                     {%- if section.settings.image != blank -%}
-                        <img class='popup-inner__item-img' src="{{ section.settings.image | img_url: 'master' }}" />
+                        <img class='popup-inner__item-img' src="{{ section.settings.image | img_url: 'master' }}"
+                             alt='banner' />
                     {%- else -%}
                         {{ 'detailed-apparel-1' | placeholder_svg_tag: 'placeholder-banner-svg' }}
                     {%- endif -%}
@@ -101,13 +102,13 @@
                         {% case block.type %}
                             {%- when 'heading' -%}
                                 <h2
-                                        class="popup-inner__heading"
+                                        class="popup-inner__heading {{ block.settings.heading_size }}"
                                         {{ block.shopify_attributes }}
                                 >
                                     {{ block.settings.heading }}
                                 </h2>
                             {%- when 'text' -%}
-                                <h2 class='popup-inner__subheading' {{ block.shopify_attributes }}>
+                                <h2 class='popup-inner__subheading {{ block.settings.text_size }}' {{ block.shopify_attributes }}>
                                     {{ block.settings.subheading }}
                                 </h2>
                             {% when 'product' %}
@@ -117,7 +118,8 @@
                                     <div class='popup-card__item'>
                                         {%- if selectedProduct != blank -%}
                                             <img class='popup-card__item-img'
-                                                 src={{ selectedProduct | img_url: 'master' }} alt='product-image'>
+                                                 alt='product-image'
+                                                 src={{ selectedProduct | img_url: 'master' }}/>
                                         {%- else -%}
                                             {{ 'detailed-apparel-1' | placeholder_svg_tag: 'placeholder-product-svg' }}
                                         {%- endif -%}
@@ -258,7 +260,7 @@
 
   //Получаем id с аттрибута блока карты продукта
   const getIdsFromCards = () => {
-    let productsData = [];
+    const productsData = [];
     return new Promise(resolve => {
       productCards.forEach(card => {
         const productId = parseInt(card.getAttribute('data-product-id'));
@@ -336,7 +338,7 @@
       return;
     }
 
-    disableBtn(true);
+    await disableBtn(true);
 
     const isProductAddedToCartType = typeof isProductsAddedToCart;
     if (isProductAddedToCartType === 'string') {
@@ -354,19 +356,19 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
-      }).then(r => !r.ok ? handleError(e) : handleSuccess());
+      }).then(r => !r.ok ? handleError() : handleSuccess());
     } catch (e) {
       handleError(e);
     }
 
-    disableBtn(false);
+    await disableBtn(false);
 
     if (isProductsAddedToCart === 'Yes') {
-      handleCartUpdate();
+      await handleCartUpdate();
       await delay(2000);
       hidePopup();
     }
-  };
+  }
 
   button.addEventListener('click', handleAddToCart);
 </script>
