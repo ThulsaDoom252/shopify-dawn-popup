@@ -1,0 +1,155 @@
+/*//gradient*/
+.popup-gradient {
+    background: rgba(238, 236, 236, 0.5);
+    background: rgb(225, 192, 192);
+    background-attachment: fixed;
+}
+
+/*overlay*/
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    transition: background-color 0.3s ease-in-out;
+    cursor: pointer !important;
+}
+
+.popup-wrapper {
+    width: 1000px;
+    box-sizing: border-box;
+    justify-self: center;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    background: #595454;
+    padding: 1.5rem;
+    font-family: SansSerif;
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.popup-inner {
+    background: white;
+    padding: 1rem;
+    position: relative;
+    min-height: 40rem !important;
+    display: grid;
+    grid-template-columns: 30% 70%;
+}
+
+.popup-inner__closeBtn {
+    position: absolute;
+    top: 10px;
+    height: 20px;
+    width: 20px;
+    color: #6c6969;
+    right: 20px;
+    cursor: pointer !important;
+}
+
+
+.popup-inner__item {
+    height: 40rem !important;
+}
+
+.popup-inner__content {
+    display: flex;
+    padding: 2rem 2rem 2rem 6rem;
+    justify-content: start;
+    flex-direction: column;
+}
+
+.popup-inner__subheading, .popup-inner__heading {
+    margin: 0;
+    padding: 0;
+    font-weight: 700;
+}
+
+.popup-inner__subheading {
+    color: #f59f03;
+}
+
+.popup-content__button {
+    padding: 1rem;
+    display: flex;
+    border: solid thin black;
+    margin-top: auto;
+    text-align: center !important;
+    box-sizing: border-box;
+    cursor: pointer !important;
+    justify-content: center;
+    width: 300px;
+    transition: all 0.3s ease-in-out;
+}
+
+.popup-content__button:hover {
+    background: #595454;
+    color: #fff;
+}
+
+.popup-content__button.disabled {
+    background-color: #bdbcbc !important;
+    color: #645c5c !important;
+    border: none !important;
+}
+
+.popup-content__button.success {
+    background: green !important;
+    color: #fff !important;
+}
+
+.popup-content__button.error {
+    color: #e31414 !important;
+}
+
+.popup-wrapper.show {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+}
+
+.popup-overlay.show {
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+
+}
+
+/*--------------------------------Card*/
+.popup-card {
+    margin-top: auto;
+    margin-bottom: auto;
+    display: flex;
+    align-items: start;
+    flex-direction: row;
+    height: 10rem;
+    width: 100%;
+}
+
+.popup-card__item {
+    width: 10rem;
+    height: inherit;
+}
+
+.popup-card__content {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    justify-content: start;
+    margin-left: 2rem;
+    height: inherit;
+    font-size: 2rem;
+}
+
+.popup-card-text {
+    margin: 0 !important;
+}
+
+.popup-card-text.price {
+    color: #f59f03;
+}
+
+

@@ -1,0 +1,480 @@
+{{ 'section-popup.css' | asset_url | stylesheet_tag }}
+
+{% comment %}
+
+Размер плейсхолдеров
+
+{% endcomment %}
+<style>
+    .placeholder-banner-svg, .placeholder-product-svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    .popup-card__item-img {
+        width: 10rem !important;
+        height: 10rem !important;
+        object-fit: cover !important;
+    }
+
+
+    .popup-inner__item-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover !important;
+    }
+
+    /*Breakpoints*/
+    @media (max-width: 1058px) {
+        .popup-wrapper {
+            width: 90% !important;
+        }
+    }
+
+    @media (max-width: 642px) {
+        .popup-wrapper {
+            top: 5% !important;
+            left: 5% !important;
+            transform: none !important;
+        }
+
+        .popup-inner {
+            grid-template-columns: none !important;
+            grid-template-rows: 30% 70%;
+            height: 80vh !important;
+        }
+
+        .popup-inner__item {
+            height: auto !important;
+        }
+
+        .popup-inner__content {
+            padding: 2rem !important;
+        }
+
+        .popup-inner__subheading, .popup-inner__heading {
+            margin: 0 auto !important;
+        }
+
+        .popup-content__button {
+            width: 80% !important;
+            margin: auto auto 0 auto !important;
+        }
+
+    }
+</style>
+
+{% capture closeBtn %}
+    <a class='popup-inner__closeBtn'>
+        {% render 'icon-custom-close', width: 50px, height: 50px %}
+    </a>
+{% endcapture %}
+
+<script src="{{ 'add-to-cart.js' | asset_url }}" defer="defer"></script>
+
+{% comment %}
+
+//Разметка блока
+
+{% endcomment %}
+{% if section.settings.isEnabled %}
+    <div class='{{ section.id }}-overlay show' id='{{ section.id }}-overlay'>
+        <div class='{{ section.id }}-wrapper show' id='{{ section.id }}'>
+            <div class='popup-inner popup-gradient'>
+                {{ closeBtn }}
+                <div class='popup-inner__item'>
+                    {%- if section.settings.image != blank -%}
+                        <img class='popup-inner__item-img' src="{{ section.settings.image | img_url: 'master' }}" />
+                    {%- else -%}
+                        {{ 'detailed-apparel-1' | placeholder_svg_tag: 'placeholder-banner-svg' }}
+                    {%- endif -%}
+                </div>
+                <div class='popup-inner__content'>
+                    {%- for block in section.blocks -%}
+                        {% case block.type %}
+                            {%- when 'heading' -%}
+                                <h2
+                                        class="popup-inner__heading {{ block.settings.heading_size }}"
+                                        {{ block.shopify_attributes }}
+                                >
+                                    {{ block.settings.heading }}
+                                </h2>
+                            {%- when 'text' -%}
+                                <div class='popup-inner__subheading {{ block.settings.text_size }}' {{ block.shopify_attributes }}>
+                                    {{ block.settings.subheading }}
+                                </div>
+                            {% when 'product' %}
+                                {% assign selectedProduct = block.settings.selected_product %}
+                                <div class='popup-card' {{ block.shopify_attributes }}
+                                     data-product-id={{ selectedProduct.id }}>
+                                    <div class='popup-card__item'>
+                                        {%- if selectedProduct != blank -%}
+                                            <img class='popup-card__item-img'
+                                                 src={{ selectedProduct | img_url: 'master' }} alt='product-image'>
+                                        {%- else -%}
+                                            {{ 'detailed-apparel-1' | placeholder_svg_tag: 'placeholder-product-svg' }}
+                                        {%- endif -%}
+                                    </div>
+                                    <div class='popup-card__content'>
+                                        <p class='popup-card-text'>{{ selectedProduct.title | default: "Product Title" }}</p>
+                                        <p class='popup-card-text price'>{{ selectedProduct.price | money | default: '0.00' }}</p>
+                                    </div>
+                                </div>
+                            {% when 'button' %}
+                                {% assign buttonLabel = block.settings.button_label %}
+                                <a class='popup-content__button {% if selectedProduct == blank %} disabled {% endif %}  {{ block.settings.button_size }}'
+                                        {{ block.shopify_attributes }}>
+                                    {{ buttonLabel }}
+                                </a>
+                        {% endcase %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% comment %}Скрип управления состоянием окна{% endcomment %}
+<script defer='defer'>
+  // Получаем элементы окна
+  const popupOverlay = document.getElementById('{{ section.id }}-overlay');
+  const popupWrapper = document.getElementById('{{ section.id }}');
+  const closeBtn = document.querySelector('.popup-inner__closeBtn');
+
+  // Получаем значения опций админ-панели
+  const isEnabled = '{{ section.settings.isEnabled }}';
+  const showOnce = '{{ section.settings.show_once }}';
+  const showWithDelay = '{{ section.settings.show_delay }}';
+
+  //Значения localStorage
+  const shownToUser = 'shownToUser';
+
+  //Массив оверлея и окна (для плавной анимации появления/закрытия)
+  const popupAndOverlay = [popupOverlay, popupWrapper];
+
+  //Определяем находимся ли в конструкторе/админ-панеле
+  const isDesignMode = Shopify.designMode;
+
+  //Было ли показано окно пользователю
+  const wasShown = localStorage.getItem(shownToUser);
+
+  //Задержка
+  const delay = (ms) => new Promise((r) => setTimeout(() => r(), ms));
+
+  //Обработчики скрытия/показа окна (скрытие отключено в админ-панеле)
+  const hidePopup = () => !isDesignMode && popupAndOverlay.forEach(item => item.classList.remove('show'));
+  const showPopup = () => popupAndOverlay.forEach(item => item.classList.add('show'));
+
+  // Обработчик показа окна если задержка больше 1 секунды
+  const showPopupWithDelay = async () => {
+    if (showWithDelay > 1) {
+      hidePopup();
+      await delay(showWithDelay * 1000);
+      showPopup();
+    }
+  };
+
+  // Обработчик показа окна
+  const handleShowPopup = () => {
+    if (isEnabled && !isDesignMode) {
+      if (showOnce === 'true') {
+        switch (wasShown) {
+          case 'false':
+            localStorage.setItem(shownToUser, true);
+            showPopupWithDelay();
+            break;
+          case 'true':
+            hidePopup();
+            break;
+          default:
+            void 0;
+        }
+      } else {
+        showPopupWithDelay();
+      }
+    }
+  };
+
+  // Обработчик для отслеживания обновления настрорек только данной секции
+  document.addEventListener('shopify:section:load', function(event) {
+    const updatedSectionId = event.detail.sectionId;
+    const popupSectionId = '{{ section.id }}';
+
+    if (updatedSectionId === popupSectionId) {
+      handleShowPopup();
+    }
+  });
+
+  //Обработчик закрытия окна
+  popupOverlay.addEventListener('click', hidePopup);
+  closeBtn.addEventListener('click', hidePopup);
+  // Предотвращаем закрытие окна при клике на само окно
+  popupWrapper.addEventListener('click', e => e.stopPropagation());
+
+  //Выполняем скрипт при первой загрузке
+  handleShowPopup();
+</script>
+
+
+{% comment %}Скрипт добавления в корзину {% endcomment %}
+<script defer='defer'>
+  // Получаем карточки продуктов и кнопку
+  const button = document.querySelector('.popup-content__button');
+  const productCards = document.querySelectorAll('.popup-card');
+
+  //Флаг отображающий статус добавление товара
+  let isProductsAddedToCart = null;
+
+  // Тексты ошибок/успеха
+  const cartErrorText = 'Sorry, it seems it was and error...:(';
+  const cartSuccessText = 'Products added :)';
+
+  //Из того что узнал - продукт добавляется в корзину по product.variant.id , не нашел способ его получить при подгрузке из блока product,
+  // захардкодил свои variant.id к двум товарам.
+  const hardcodedVariantsIds = [
+    {
+      name: 'razorMissions',
+      variantId: 43604413481127,
+      productId: 7756990218407
+    },
+    {
+      name: 'SDK',
+      variantId: 43604451950759,
+      productId: 7756998148263
+    }
+  ];
+
+  //Получаем id с аттрибута блока карты продукта (data-product-id)
+  const getIdsFromCards = () => {
+    let productsData = [];
+    return new Promise(resolve => {
+      productCards.forEach(card => {
+        const productId = parseInt(card.getAttribute('data-product-id'));
+        productId && hardcodedVariantsIds.forEach(product => {
+          product.productId === productId ? productsData.push({ id: product.variantId, quantity: 1 }) : void 0;
+        });
+      });
+      resolve(productsData);
+    });
+  };
+
+  //Отключаем/включаем кнопку после завершения запроса
+  const disableBtn = async (disable) => {
+    const changeClassDelay = 2000;
+    if (disable) {
+      button.removeEventListener('click', handleAddToCart);
+      button.classList.add('disabled');
+      button.innerText = 'Adding..';
+    } else {
+      switch (isProductsAddedToCart) {
+        case 'No': {
+          button.innerText = cartErrorText;
+          button.classList.add('error');
+          await delay(changeClassDelay);
+          button.innerText = '{{ buttonLabel }}';
+          break;
+        }
+        case 'Yes': {
+          button.innerText = cartSuccessText;
+          button.classList.add('success');
+          await (delay(changeClassDelay));
+          button.innerText = '{{ buttonLabel }}';
+          break;
+        }
+        default:
+          button.innerText = '{{ buttonLabel }}';
+      }
+      button.classList.contains('error') && button.classList.remove('error');
+      button.classList.contains('success') && button.classList.remove('success');
+      button.classList.remove('disabled');
+      button.addEventListener('click', handleAddToCart);
+    }
+  };
+
+
+  // Хендлеры для успеха/ошибки добавления товаров
+  const handleError = (error) => {
+    console.error('Error in  adding product to cart ', error);
+    isProductsAddedToCart = 'No';
+  };
+
+  const handleSuccess = () => isProductsAddedToCart = 'Yes';
+
+
+  // Обновляем состояние корзины. Перепробывал несколько вариантов...не работает :(
+  function handleCartUpdate() {
+    fetch('/cart.js', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('cart-count').textContent = data.items.count;
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
+  }
+
+  // Добавляем товар в корзину
+  async function handleAddToCart() {
+    const cardIds = await getIdsFromCards();
+
+    if (cardIds.length === 0) {
+      return;
+    }
+
+    disableBtn(true);
+
+    const isProductAddedToCartType = typeof isProductsAddedToCart;
+    if (isProductAddedToCartType === 'string') {
+      isProductsAddedToCart = null;
+    }
+
+    const formData = {
+      'items': [...cardIds]
+    };
+
+    try {
+      await fetch('cart/add.js', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      }).then(r => !r.ok ? handleError(e) : handleSuccess());
+    } catch (e) {
+      handleError(e);
+    }
+
+    await delay(1000);
+
+    if (isProductsAddedToCart === 'Yes') {
+      handleCartUpdate();
+      await delay(1500);
+      hidePopup();
+    }
+
+    disableBtn(false);
+  };
+
+  button.addEventListener('click', handleAddToCart);
+</script>
+
+
+{% schema %}
+{
+  "name": "Popup",
+  "tag": "section",
+  "class": "popup",
+  "disabled_on": {
+    "groups": [
+      "header",
+      "footer"
+    ]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "isEnabled",
+      "label": "Enabled",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_once",
+      "label": "Show once per user",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "show_delay",
+      "min": 1,
+      "max": 60,
+      "step": 1,
+      "default": 1,
+      "label": "Initial delay before showing"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Select main image"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "default": "Unwind with ease",
+          "label": "Text"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Subheading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "subheading",
+          "default": "Its a brain time",
+          "label": "Text"
+        }
+      ]
+    },
+    {
+      "type": "product",
+      "name": "Product",
+      "limit": 2,
+      "settings": [
+        {
+          "type": "product",
+          "id": "selected_product",
+          "label": "Select a Product from the Collection"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Button",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label",
+          "default": "Add to cart",
+          "label": "Text"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Popup",
+      "category": "Custom",
+      "blocks": [
+        {
+          "type": "heading"
+        },
+        {
+          "type": "text"
+        },
+        {
+          "type": "product"
+        },
+        {
+          "type": "button"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
