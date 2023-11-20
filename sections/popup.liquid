@@ -302,7 +302,7 @@
 
 
   // Обновляем состояние корзины. Перепробывал несколько вариантов...не работает :(
-  function handleCartUpdate() {
+  async function handleCartUpdate() {
     fetch('/cart.js', {
       method: 'GET',
       headers: {
@@ -348,8 +348,6 @@
     } catch (e) {
       handleError(e);
     }
-
-    await delay(1000);
 
     if (isProductsAddedToCart === 'Yes') {
       handleCartUpdate();
