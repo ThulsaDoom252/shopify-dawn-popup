@@ -71,6 +71,7 @@
 
 .popup-inner__subheading {
     color: #f59f03;
+    font-size: 1.8rem !important;
 }
 
 .popup-content__button {
@@ -120,8 +121,8 @@
 
 /*--------------------------------Card*/
 .popup-card {
-    margin-top: auto;
-    margin-bottom: auto;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
     display: flex;
     align-items: start;
     flex-direction: row;

@@ -61,6 +61,7 @@
             margin: auto auto 0 auto !important;
         }
 
+
         @media (max-width: 476px) {
             .popup-inner {
                 grid-template-rows: 20% 80% !important;
@@ -100,15 +101,15 @@
                         {% case block.type %}
                             {%- when 'heading' -%}
                                 <h2
-                                        class="popup-inner__heading {{ block.settings.heading_size }}"
+                                        class="popup-inner__heading"
                                         {{ block.shopify_attributes }}
                                 >
                                     {{ block.settings.heading }}
                                 </h2>
                             {%- when 'text' -%}
-                                <div class='popup-inner__subheading {{ block.settings.text_size }}' {{ block.shopify_attributes }}>
+                                <h2 class='popup-inner__subheading' {{ block.shopify_attributes }}>
                                     {{ block.settings.subheading }}
-                                </div>
+                                </h2>
                             {% when 'product' %}
                                 {% assign selectedProduct = block.settings.selected_product %}
                                 <div class='popup-card' {{ block.shopify_attributes }}
@@ -140,7 +141,7 @@
     </div>
 {% endif %}
 
-{% comment %}Скрип управления состоянием окна{% endcomment %}
+{% comment %}Управления состоянием окна{% endcomment %}
 <script defer='defer'>
   // Получаем элементы окна
   const popupOverlay = document.getElementById('{{ section.id }}-overlay');
@@ -155,23 +156,25 @@
   //Значения localStorage
   const shownToUser = 'shownToUser';
 
-  //Массив оверлея и окна (для плавной анимации появления/закрытия)
+  //todo
+  //Добавить плавную анимацию
+  //оверлей и окно для плавной анимации
   const popupAndOverlay = [popupOverlay, popupWrapper];
 
-  //Определяем находимся ли в конструкторе/админ-панеле
+  //Определяем режим конструктора/админ-панели
   const isDesignMode = Shopify.designMode;
 
   //Было ли показано окно пользователю
   const wasShown = localStorage.getItem(shownToUser);
 
   //Задержка
-  const delay = (ms) => new Promise((r) => setTimeout(() => r(), ms));
+  const delay = (ms) => new Promise(r => setTimeout(() => r(), ms));
 
   //Обработчики скрытия/показа окна (скрытие отключено в админ-панеле)
   const hidePopup = () => !isDesignMode && popupAndOverlay.forEach(item => item.classList.remove('show'));
   const showPopup = () => popupAndOverlay.forEach(item => item.classList.add('show'));
 
-  // Обработчик показа окна если задержка больше 1 секунды
+  // показ окна если задержка больше 1 секунды
   const showPopupWithDelay = async () => {
     if (showWithDelay > 1) {
       hidePopup();
@@ -222,21 +225,24 @@
 </script>
 
 
-{% comment %}Скрипт добавления в корзину {% endcomment %}
+{% comment %} добавления в корзину {% endcomment %}
+//todo - имплиминтировать передачу variant.id товара из секции блока
+//todo - обновлять корзину в реальном времени
 <script defer='defer'>
-  // Получаем карточки продуктов и кнопку
+  // карточки продуктов и кнопка
   const button = document.querySelector('.popup-content__button');
   const productCards = document.querySelectorAll('.popup-card');
 
-  //Флаг отображающий статус добавление товара
+  //флаг отображающий статус добавление товара
   let isProductsAddedToCart = null;
 
   // Тексты ошибок/успеха
   const cartErrorText = 'Sorry, it seems it was and error...:(';
   const cartSuccessText = 'Products added :)';
 
-  //Из того что узнал - продукт добавляется в корзину по product.variant.id , не нашел способ его получить при подгрузке из блока product,
-  // захардкодил свои variant.id к двум товарам.
+  //Из того что узнал - продукт добавляется в корзину по product.variant.id ,
+  // не нашел способ его получить при подгрузке из блока product,
+  // захардкодил свои variant.id к двум товарам своим товарам.
   const hardcodedVariantsIds = [
     {
       name: 'razorMissions',
@@ -250,7 +256,7 @@
     }
   ];
 
-  //Получаем id с аттрибута блока карты продукта (data-product-id)
+  //Получаем id с аттрибута блока карты продукта
   const getIdsFromCards = () => {
     let productsData = [];
     return new Promise(resolve => {
@@ -416,7 +422,7 @@
         {
           "type": "text",
           "id": "heading",
-          "default": "Unwind with ease",
+          "default": "Heading",
           "label": "Text"
         }
       ]
@@ -429,7 +435,7 @@
         {
           "type": "text",
           "id": "subheading",
-          "default": "Its a brain time",
+          "default": "Subheading",
           "label": "Text"
         }
       ]
