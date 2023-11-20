@@ -338,7 +338,7 @@
       return;
     }
 
-    await disableBtn(true);
+    disableBtn(true);
 
     const isProductAddedToCartType = typeof isProductsAddedToCart;
     if (isProductAddedToCartType === 'string') {
@@ -361,10 +361,10 @@
       handleError(e);
     }
 
-    await disableBtn(false);
+    disableBtn(false);
 
     if (isProductsAddedToCart === 'Yes') {
-      await handleCartUpdate();
+      handleCartUpdate();
       await delay(2000);
       hidePopup();
     }
