@@ -156,8 +156,7 @@
   //Значения localStorage
   const shownToUser = 'shownToUser';
 
-  //todo
-  //Добавить плавную анимацию
+  //todo - Добавить плавную анимацию
   //оверлей и окно для плавной анимации
   const popupAndOverlay = [popupOverlay, popupWrapper];
 
@@ -176,7 +175,7 @@
 
   // показ окна если задержка больше 1 секунды
   const showPopupWithDelay = async () => {
-    if (showWithDelay > 1) {
+    if (showWithDelay >= 1) {
       hidePopup();
       await delay(showWithDelay * 1000);
       showPopup();
@@ -225,9 +224,11 @@
 </script>
 
 
-{% comment %} добавления в корзину {% endcomment %}
+{% comment %} добавления в корзину
 //todo - имплиминтировать передачу variant.id товара из секции блока
 //todo - обновлять корзину в реальном времени
+{% endcomment %}
+
 <script defer='defer'>
   // карточки продуктов и кнопка
   const button = document.querySelector('.popup-content__button');
@@ -361,13 +362,14 @@
       handleError(e);
     }
 
+    disableBtn(false);
+
     if (isProductsAddedToCart === 'Yes') {
       handleCartUpdate();
-      await delay(1500);
+      await delay(2000);
       hidePopup();
     }
 
-    disableBtn(false);
   };
 
   button.addEventListener('click', handleAddToCart);
