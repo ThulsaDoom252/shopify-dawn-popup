@@ -153,7 +153,7 @@
   // Получаем значения опций админ-панели
   const isEnabled = '{{ section.settings.isEnabled }}';
   const showOnce = '{{ section.settings.show_once }}';
-  const showWithDelay = '{{ section.settings.show_delay }}';
+  const showWithDelayValue = '{{ section.settings.show_delay }}';
 
   //Значения localStorage
   const shownToUser = 'shownToUser';
@@ -177,9 +177,9 @@
 
   // показ окна если задержка больше 1 секунды
   const showPopupWithDelay = async () => {
-    if (showWithDelay >= 1) {
+    if (showWithDelayValue >= 1) {
       hidePopup();
-      await delay(showWithDelay * 1000);
+      await delay(showWithDelayValue * 1000);
       showPopup();
     }
   };
@@ -300,26 +300,56 @@
       }
       button.classList.contains('error') && button.classList.remove('error');
       button.classList.contains('success') && button.classList.remove('success');
-      button.classList.remove('disabled');
-      button.addEventListener('click', handleAddToCart);
+      if (!isProductsAddedToCart) {
+        button.classList.remove('disabled');
+        button.addEventListener('click', handleAddToCart);
+      }
+
     }
   };
 
   // Хендлеры для успеха/ошибки добавления товаров
-  const handleError = (error) => {
-    console.error('Error in  adding product to cart ', error);
-    isProductsAddedToCart = 'No';
+  const handleError = (error) => console.error('Error in  adding product to cart ', error);
+
+  const handleSuccess = async () => {
+    const cartBubbleClass = 'cart-count-bubble';
+    const cartIcon = document.querySelector('.header__icon--cart');
+    const cartBubble = document.querySelector(`.${cartBubbleClass}`);
+
+    try {
+      const res = await fetch('/cart.json');
+      const cart = await res.json();
+
+      const cartCount = cart.item_count;
+
+      if (!cartBubble) {
+        cartIcon.querySelector('svg').classList.replace('icon-cart-empty', 'icon-cart');
+        const newCartCountBubble = document.createElement('div');
+        newCartCountBubble.classList.add(cartBubbleClass);
+        newCartCountBubble.innerHTML = `<span aria-hidden='true'>${cartCount}</span><span class='visually-hidden'>${cartCount} items</span>`;
+        cartIcon.appendChild(newCartCountBubble);
+      } else {
+        cartBubble.childNodes[0].innerText = cartCount;
+        cartBubble.childNodes[1].innerText = cartCount;
+      }
+
+      isProductsAddedToCart = 'Yes';
+      await disableBtn(false);
+      hidePopup();
+
+    } catch (e) {
+      handleError(e);
+    }
   };
 
-  const handleSuccess = () => isProductsAddedToCart = 'Yes';
-
   // Обновляем состояние корзины. Перепробывал несколько вариантов...не работает :(
-  async function handleCartUpdate() {
-    fetch('/cart.js', {
-      method: 'GET',
+  async function handleCartUpdate(data) {
+    fetch('/cart/update.js', {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify(data)
     })
       .then(response => response.json())
       .then(data => {
@@ -356,18 +386,11 @@
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(formData)
-      }).then(r => !r.ok ? handleError() : handleSuccess());
+      }).then(r => !r.ok ? handleError(r) : handleSuccess());
     } catch (e) {
       handleError(e);
     }
 
-    disableBtn(false);
-
-    if (isProductsAddedToCart === 'Yes') {
-      handleCartUpdate();
-      await delay(2000);
-      hidePopup();
-    }
   }
 
   button.addEventListener('click', handleAddToCart);
