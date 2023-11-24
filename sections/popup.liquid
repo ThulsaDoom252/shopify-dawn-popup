@@ -304,7 +304,6 @@
         button.classList.remove('disabled');
         button.addEventListener('click', handleAddToCart);
       }
-
     }
   };
 
@@ -322,6 +321,7 @@
 
       const cartCount = cart.item_count;
 
+      //Обновляем остояние счетчика корзины
       if (!cartBubble) {
         cartIcon.querySelector('svg').classList.replace('icon-cart-empty', 'icon-cart');
         const newCartCountBubble = document.createElement('div');
@@ -333,6 +333,7 @@
         cartBubble.childNodes[1].innerText = cartCount;
       }
 
+      //Скрываем popup после успешного обновления
       isProductsAddedToCart = 'Yes';
       await disableBtn(false);
       hidePopup();
@@ -341,24 +342,6 @@
       handleError(e);
     }
   };
-
-  // Обновляем состояние корзины. Перепробывал несколько вариантов...не работает :(
-  async function handleCartUpdate(data) {
-    fetch('/cart/update.js', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-      .then(response => response.json())
-      .then(data => {
-        document.getElementById('cart-count').textContent = data.items.count;
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
-  }
 
   // Добавляем товар в корзину
   async function handleAddToCart() {
@@ -390,7 +373,6 @@
     } catch (e) {
       handleError(e);
     }
-
   }
 
   button.addEventListener('click', handleAddToCart);
