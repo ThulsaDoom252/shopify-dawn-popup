@@ -113,8 +113,11 @@
                                 </h2>
                             {% when 'product' %}
                                 {% assign selectedProduct = block.settings.selected_product %}
+                                {% for variant in selectedProduct.variants %}
+                                    {% assign selectedVariant = variant %}
+                                {% endfor %}
                                 <div class='popup-card' {{ block.shopify_attributes }}
-                                     data-product-id={{ selectedProduct.id }}>
+                                     data-product-id={{ selectedVariant.id }}>
                                     <div class='popup-card__item'>
                                         {%- if selectedProduct != blank -%}
                                             <img class='popup-card__item-img'
@@ -125,8 +128,13 @@
                                         {%- endif -%}
                                     </div>
                                     <div class='popup-card__content'>
-                                        <p class='popup-card-text'>{{ selectedProduct.title | default: "Product Title" }}</p>
-                                        <p class='popup-card-text price'>{{ selectedProduct.price | money | default: '0.00' }}</p>
+                                        <p class='popup-card-text sku'>{{ selectedVariant.sku }}</p>
+                                        <p class='popup-card-text title'>{{ selectedProduct.title | default: "Product Title" }}</p>
+                                        <div class='popup-card-price-block'>
+                                            <p class='popup-card-text price'>{{ selectedProduct.price | money | default: '0.00' }}</p>
+                                            <p class='popup-card-text oldPrice'>{{ selectedProduct.compare_at_price | money }}</p>
+                                        </div>
+
                                     </div>
                                 </div>
                             {% when 'button' %}
@@ -225,10 +233,6 @@
   handleShowPopup();
 </script>
 
-{% comment %} добавления в корзину
-//todo - имплиминтировать передачу variant.id товара из секции блока
-{% endcomment %}
-
 <script defer='defer'>
   // карточки продуктов и кнопка
   const button = document.querySelector('.popup-content__button');
@@ -241,21 +245,6 @@
   const cartErrorText = 'Sorry, it seems it was and error...:(';
   const cartSuccessText = 'Products added :)';
 
-  //Из того что узнал - продукт добавляется в корзину по product.variant.id ,
-  // не нашел способ его получить при подгрузке из блока product,
-  // захардкодил свои variant.id к двум товарам своим товарам.
-  const hardcodedVariantsIds = [
-    {
-      name: 'razorMissions',
-      variantId: 43604413481127,
-      productId: 7756990218407
-    },
-    {
-      name: 'SDK',
-      variantId: 43604451950759,
-      productId: 7756998148263
-    }
-  ];
 
   //Получаем id с аттрибута блока карты продукта
   const getIdsFromCards = () => {
@@ -263,9 +252,7 @@
     return new Promise(resolve => {
       productCards.forEach(card => {
         const productId = parseInt(card.getAttribute('data-product-id'));
-        productId && hardcodedVariantsIds.forEach(product => {
-          product.productId === productId ? productsData.push({ id: product.variantId, quantity: 1 }) : void 0;
-        });
+        productId && productsData.push({ id: productId, quantity: 1 });
       });
       resolve(productsData);
     });
@@ -285,6 +272,8 @@
           button.classList.add('error');
           await delay(changeClassDelay);
           button.innerText = '{{ buttonLabel }}';
+          button.classList.remove('disabled');
+          button.addEventListener('click', handleAddToCart);
           break;
         }
         case 'Yes': {
@@ -299,15 +288,15 @@
       }
       button.classList.contains('error') && button.classList.remove('error');
       button.classList.contains('success') && button.classList.remove('success');
-      if (!isProductsAddedToCart) {
-        button.classList.remove('disabled');
-        button.addEventListener('click', handleAddToCart);
-      }
     }
   };
 
   // Хендлеры для успеха/ошибки добавления товаров
-  const handleError = (error) => console.error('Error in  adding product to cart ', error);
+  const handleError = (error) => {
+    console.error('Error in  adding product to cart ', error);
+    isProductsAddedToCart = 'No';
+    disableBtn(false);
+  };
 
   const handleSuccess = async () => {
     const cartBubbleClass = 'cart-count-bubble';
@@ -352,8 +341,8 @@
 
     disableBtn(true);
 
-    const isProductAddedToCartType = typeof isProductsAddedToCart;
-    if (isProductAddedToCartType === 'string') {
+    const isProductsAddedToCartType = typeof isProductsAddedToCart;
+    if (isProductsAddedToCartType === 'string') {
       isProductsAddedToCart = null;
     }
 
